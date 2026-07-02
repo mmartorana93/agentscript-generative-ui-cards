@@ -90,6 +90,73 @@ marker are invisible.
 
 ---
 
+## How it flows — and is it agentic?
+
+**Yes, it stays fully agentic.** The LLM reasons about intent, **chooses which action to call** (with
+arguments it extracts from the conversation), and then **decides whether and how** to surface a card.
+The only *non*-agentic part is the **card's data**: that is computed by Apex/Flow from real records —
+so the model can never invent prices, allergens, ETAs or refund amounts. In short: the model owns the
+**decisions**, the server owns the **data**, the frontend owns the **rendering**.
+
+### Sequence — who does what, in order
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant R as Custom chat (React)
+    participant API as Agent API
+    participant LLM as Agent (LLM · Atlas)
+    participant AX as Apex / Flow action
+    participant DB as Data (Data Cloud / CRM)
+
+    U->>R: "recommend me something"
+    R->>API: POST /message (text)
+    API->>LLM: deliver turn
+    Note over LLM: 🧠 Agentic: reason on intent,<br/>route to the right sub-agent
+    LLM->>AX: 🧠 Agentic: CALL action + args
+    AX->>DB: query real data
+    DB-->>AX: rows (allergen-safe, totals, status…)
+    Note over AX: ⚙️ Deterministic: build cardJson<br/>from data (null if none)
+    AX-->>LLM: outputs + cardJson
+    Note over LLM: 🧠 Agentic: write short text AND<br/>echo cardJson verbatim in [[PRIMO_CARD]]
+    LLM-->>API: reply = text + marker
+    API-->>R: reply (plain text)
+    Note over R: 🖥️ Deterministic: parseCards()<br/>extract JSON · strip marker · validate type
+    R-->>U: sees text + rendered card (never the JSON)
+```
+
+### State — the agent's decision points
+
+```mermaid
+flowchart TD
+    A([User message]) --> B{"🧠 LLM reasoning<br/>Does this need an action?"}
+    B -->|no| T["Reply with TEXT only<br/>(greetings, FAQ, clarifying Qs)"]
+    B -->|yes| C["🧠 LLM picks action + args<br/>(e.g. build_meal_details)"]
+    C --> D["⚙️ Apex/Flow executes<br/>builds cardJson from real data"]
+    D --> E{cardJson present?}
+    E -->|null / no data| F["🧠 LLM replies with text only"]
+    E -->|has data| G["🧠 LLM: short text + echo cardJson<br/>inside &#91;&#91;PRIMO_CARD&#93;&#93; … &#91;&#91;/PRIMO_CARD&#93;&#93;"]
+    G --> H["🖥️ React: parse marker →<br/>render the matching registered component"]
+    T --> Z([Shown to user])
+    F --> Z
+    H --> Z
+
+    classDef agentic fill:#FDE9D9,stroke:#F4543A,color:#081A27;
+    classDef deterministic fill:#DDF3E4,stroke:#26B864,color:#081A27;
+    classDef ui fill:#E3F1FB,stroke:#83D9F2,color:#081A27;
+    class B,C,F,G agentic;
+    class D deterministic;
+    class H ui;
+```
+
+> **Why "controlled"?** The model can only pick from **actions you registered**, and can only attach a
+> **server-produced** `cardJson`. The frontend renders **only the `type`s you pre-built** (unknown
+> types render nothing). Maximum agency in the *decisions*; zero freedom to invent data or UI — which
+> is what makes it safe and on-brand.
+
+---
+
 ## Why it works well
 
 - **No dependency on native rendering.** Sidesteps the Chat V2 / connection / channel config that
