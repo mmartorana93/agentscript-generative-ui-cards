@@ -126,6 +126,14 @@ marker are invisible.
 - Pattern implemented and proven on a Salesforce Agentforce **Agent Script** service agent ("Primo",
   a food-delivery demo) with a custom React (Experience Cloud) chat over the Agent API.
 
+### Authors
+
+- **Manuel Martorana** ([@mmartorana93](https://github.com/mmartorana93))
+- **Francesco Angelini** ([@fraangel](https://github.com/fraangel))
+
+The reference "Primo" agent (Agent Script, backing Apex/Flows, and the UC1/UC2 flows the example
+actions come from) was built together as part of the AFD360 team work.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
