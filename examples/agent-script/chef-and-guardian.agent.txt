@@ -1,0 +1,34 @@
+# Agent Script excerpt — the card-relevant parts (Primo agent, sanitized)
+# Full pattern & context: see ../../guide/RECIPE.md and ../../README.md
+# This is an EXCERPT, not a runnable bundle — it shows (a) the CARD RENDERING instruction
+# and (b) how a cardJson output is declared on an action.
+
+# ─────────────────────────────────────────────────────────────────────────
+# (a) CHEF sub-agent — instruction that tells the LLM to emit the marker
+# ─────────────────────────────────────────────────────────────────────────
+95:              (The meal carousel also renders as a card in the custom web chat — see CARD RENDERING below. It is separate from and in addition to the visual carousel component.)
+98:                1. When the customer has chosen their dish(es) but has NOT yet given a final go-ahead, call build_order_summary with the chosen items. Present its `summaryText`, ask the customer to confirm, and append its cardJson in the marker (see CARD RENDERING below). Do NOT place the order yet. Do NOT ask the customer for the total — it is computed.
+
+# Verbatim instruction line (Chef):
+CARD RENDERING (custom web chat): when build_meal_details, build_order_summary or place_order returns a non-empty cardJson value, append that value EXACTLY as returned — unchanged, not summarized — on a new line at the very end of your reply, wrapped like this: [[PRIMO_CARD]]<the cardJson value>[[/PRIMO_CARD]]. Emit it at most once per turn. Never mention the marker or the JSON to the customer, and never write the marker when cardJson is empty or absent.
+
+# ─────────────────────────────────────────────────────────────────────────
+# (b) An action definition WITH the additive cardJson output (build_order_summary)
+# ─────────────────────────────────────────────────────────────────────────
+        build_order_summary:
+            target: "apex://BuildOrderSummary"
+            description: "Compute prices/total for the chosen items and return a pre-order summary so the customer can confirm before the order is placed. Does not place the order."
+            inputs:
+                items: string
+                    description: "The chosen items, comma or semicolon separated."
+                    is_required: True
+                total: string
+                    description: "Optional total; computed from the catalog when blank."
+                    is_required: False
+            outputs:
+                summaryText: string
+                    description: "Displayable bullet summary of the pre-order to show the customer."
+                    is_displayable: True
+                cardJson: string
+                    description: "Structured JSON for the custom React order-summary card. Append verbatim inside the [[PRIMO_CARD]] marker; never narrate it."
+                    is_displayable: True
