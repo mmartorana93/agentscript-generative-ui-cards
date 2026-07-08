@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generative UI Cards — Lucid Diagram Blueprint</title>
+<style>
+  :root{
+    /* Pronto brand (from the repo's React cards) */
+    --speed:#FF5A36; --speed-dark:#E03E1E; --fresh:#1FB85C; --sky:#2D7FF9;
+    /* Salesforce brand */
+    --sf-blue:#00A1E0; --sf-navy:#032D60; --agentforce:#0B5CAB;
+    /* Semantic diagram colors (kept identical to the Mermaid classDefs in the repo) */
+    --agentic-fill:#FDE9D9; --agentic-stroke:#F4543A;
+    --det-fill:#DDF3E4; --det-stroke:#26B864;
+    --ui-fill:#E3F1FB; --ui-stroke:#83D9F2;
+    --ink:#081A27; --muted:#5C6B7A; --line:#E2E8EF; --bg:#F6F8FB; --card:#FFFFFF;
+    --shadow:0 6px 22px rgba(8,26,39,.09);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 24px 90px}
+  a{color:var(--sky)}
+
+  header.hero{background:linear-gradient(135deg,var(--sf-navy) 0%,var(--agentforce) 55%,var(--sf-blue) 100%);
+    border-radius:20px;padding:34px 40px;color:#fff;box-shadow:var(--shadow)}
+  header.hero .badge{display:inline-block;background:rgba(255,255,255,.18);padding:5px 13px;border-radius:99px;
+    font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:12px}
+  header.hero h1{margin:0 0 6px;font-size:30px;font-weight:800;letter-spacing:-.02em}
+  header.hero p{margin:0;font-size:16px;max-width:820px;opacity:.95}
+  .hero-note{margin-top:14px;font-size:13px;background:rgba(0,0,0,.18);padding:9px 14px;border-radius:10px;display:inline-block}
+
+  h2.section{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    margin:52px 0 8px;display:flex;align-items:center;gap:10px}
+  h2.section::before{content:"";width:26px;height:3px;border-radius:2px;background:var(--speed)}
+  .lead{color:var(--muted);font-size:14.5px;margin:0 0 20px;max-width:860px}
+
+  /* Asset table */
+  table.assets{width:100%;border-collapse:collapse;background:var(--card);border-radius:14px;overflow:hidden;
+    box-shadow:var(--shadow);font-size:13px}
+  table.assets th{background:var(--sf-navy);color:#fff;text-align:left;padding:11px 13px;font-weight:600;font-size:12px;
+    letter-spacing:.03em}
+  table.assets td{padding:10px 13px;border-top:1px solid var(--line);vertical-align:top}
+  table.assets tr:nth-child(even) td{background:#FBFCFE}
+  .swatch{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:middle;margin-right:6px;border:1px solid rgba(0,0,0,.1)}
+  .mono{font-family:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;font-size:11.5px}
+  .lic{font-size:11.5px;color:var(--muted)}
+  .warn{color:var(--speed-dark);font-weight:600}
+
+  /* Diagram canvas */
+  .canvas{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:26px 28px;margin-top:14px;overflow-x:auto}
+  .canvas h3{margin:0 0 4px;font-size:18px;font-weight:800}
+  .canvas .sub{margin:0 0 20px;font-size:13px;color:var(--muted)}
+
+  /* Node = a Lucid shape. The .icon-slot marks WHERE an official logo goes. */
+  .node{background:var(--card);border:2px solid var(--n,#CBD5E1);border-radius:12px;padding:12px 15px;
+    box-shadow:0 2px 8px rgba(8,26,39,.06);position:relative}
+  .node .role{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--n,#64748B)}
+  .node .title{font-size:15px;font-weight:800;margin:2px 0 3px;display:flex;align-items:center;gap:8px}
+  .node .desc{font-size:12px;color:var(--muted)}
+  .icon-slot{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 7px;
+    border:1.5px dashed var(--n,#94A3B8);border-radius:7px;font-size:10px;font-weight:700;color:var(--n,#64748B);
+    background:#fff;letter-spacing:.02em;white-space:nowrap}
+  .icon-slot::before{content:"◇ ";opacity:.7}
+
+  .lane{display:grid;gap:14px;align-items:stretch}
+  .arrow{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;font-weight:600}
+  .arrow span{background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:3px 11px}
+
+  /* Row 1 flow (component & data flow) */
+  .flowrow{display:grid;grid-template-columns:1fr 40px 1fr 40px 1fr 40px 1fr;align-items:center;gap:0;min-width:900px}
+  .flowrow .arrow{flex-direction:column}
+  .caption{font-size:11px;color:var(--muted);text-align:center;margin-top:5px}
+
+  /* color helpers for node borders */
+  .n-react{--n:#61DAFB} .n-proxy{--n:#7A52C7} .n-api{--n:#0176D3} .n-agent{--n:var(--agentforce)}
+  .n-action{--n:var(--fresh)} .n-data{--n:var(--sf-blue)} .n-user{--n:#64748B}
+  .n-agentic{--n:var(--agentic-stroke)} .n-det{--n:var(--det-stroke)} .n-ui{--n:var(--ui-stroke)}
+
+  /* Sequence: vertical actor columns */
+  .seq{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;min-width:940px}
+  .seq .actor{text-align:center}
+  .seq .msg{grid-column:1/-1;background:var(--bg);border:1px solid var(--line);border-left:4px solid var(--speed);
+    border-radius:8px;padding:8px 12px;font-size:12.5px;margin:3px 0}
+  .seq .msg .num{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--speed);color:#fff;
+    font-weight:700;font-size:11px;align-items:center;justify-content:center;margin-right:8px}
+  .seq .msg.note{border-left-color:var(--agentic-stroke);background:var(--agentic-fill)}
+  .seq .msg.note.det{border-left-color:var(--det-stroke);background:var(--det-fill)}
+  .seq .msg.note.ui{border-left-color:var(--ui-stroke);background:var(--ui-fill)}
+  .tag-agentic{color:var(--agentic-stroke);font-weight:700}
+  .tag-det{color:var(--det-stroke);font-weight:700}
+  .tag-ui{color:#2596c9;font-weight:700}
+
+  /* Decision flow */
+  .flow-v{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .flow-v .row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center}
+  .decision{background:var(--agentic-fill);border:2px solid var(--agentic-stroke);border-radius:12px;padding:11px 16px;
+    font-size:13px;font-weight:700;text-align:center;transform:rotate(0deg)}
+  .branch-lbl{font-size:11px;font-weight:700;color:var(--muted);background:#fff;border:1px solid var(--line);
+    border-radius:99px;padding:2px 9px}
+
+  .legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:12.5px;color:var(--muted);align-items:center}
+  .legend .k{display:flex;align-items:center;gap:7px}
+  .legend .box{width:24px;height:16px;border-radius:4px;border:2px solid}
+  .k-agentic .box{background:var(--agentic-fill);border-color:var(--agentic-stroke)}
+  .k-det .box{background:var(--det-fill);border-color:var(--det-stroke)}
+  .k-ui .box{background:var(--ui-fill);border-color:var(--ui-stroke)}
+  .k-slot .box{background:#fff;border:1.5px dashed #94A3B8}
+
+  ol.steps{margin:0;padding-left:22px;font-size:14px}
+  ol.steps li{margin:9px 0}
+  ol.steps code, p code, td code{background:#EEF2F7;padding:1.5px 6px;border-radius:5px;font-size:12.5px;
+    font-family:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace}
+  .callout{background:#FFF8EC;border:1px solid #F6D488;border-left:5px solid #F0B429;border-radius:12px;
+    padding:15px 18px;margin-top:16px;font-size:13.5px}
+  .callout b{color:#8A5A00}
+  .callout.blue{background:#EEF5FF;border-color:#AECBFB;border-left-color:var(--sky)}
+  .callout.blue b{color:#1B5FCC}
+
+  footer{margin-top:56px;text-align:center;color:var(--muted);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="badge">Diagram Blueprint · Repo → Lucid</span>
+    <h1>Generative UI Cards on Agentforce — Official-Icon Diagram Blueprint</h1>
+    <p>A build guide for recreating the repo's three architecture diagrams in <b>Lucidchart</b> using
+    <b>official product logos</b> (React · Agentforce · Experience Cloud · Data&nbsp;360 · Tableau · Slack).
+    This HTML is the <b>reference layout</b> — the diamond markers <span class="icon-slot" style="--n:#fff;color:#fff;border-color:rgba(255,255,255,.6)">ICON&nbsp;SLOT</span>
+    show exactly where each official icon is dropped once in Lucid.</p>
+    <div class="hero-note">📍 Repo: <span class="mono">mmartorana93/agentscript-generative-ui-cards</span> &nbsp;·&nbsp; Authors: Manuel Martorana · Francesco Angelini</div>
+  </header>
+
+  <!-- ========================= ASSET TABLE ========================= -->
+  <h2 class="section">1 · Official icon asset map</h2>
+  <p class="lead">Every box that carries a logo, its <b>official</b> source, brand color, license note, and the
+  Lucid shape to use. Prefer the Lucid <b>“Salesforce Architecture Diagrams”</b> shape library for Salesforce
+  products (it ships the current, on-brand icons); use the brand SVG/PNG only where Lucid has no native shape.</p>
+
+  <table class="assets">
+    <thead>
+      <tr><th style="width:14%">Slot / product</th><th style="width:26%">Official source</th>
+      <th style="width:12%">Brand color</th><th style="width:26%">Lucid shape to use</th><th style="width:22%">License / usage note</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>React</b><br><span class="lic">custom chat frontend</span></td>
+        <td><a href="https://react.dev/">react.dev</a> brand logo (atom mark); mirror on <span class="mono">simpleicons.org/?q=react</span></td>
+        <td><span class="swatch" style="background:#61DAFB"></span><span class="mono">#61DAFB</span></td>
+        <td>Not in SF library → <b>import custom shape</b> (SVG). Meta brand asset.</td>
+        <td class="lic">React logo © Meta, CC-BY 4.0. Don't recolor the mark.</td>
+      </tr>
+      <tr>
+        <td><b>Agentforce</b><br><span class="lic">the agent / LLM (Atlas)</span></td>
+        <td>Lucid SF Architecture library (Agentforce shapes, added in the 2026 refresh)</td>
+        <td><span class="swatch" style="background:#0B5CAB"></span><span class="mono">#0B5CAB</span></td>
+        <td><b>“Salesforce Architecture Diagrams”</b> → Agentforce card/agent shape</td>
+        <td class="lic">SF trademark — use as-is via the shape library, don't alter.</td>
+      </tr>
+      <tr>
+        <td><b>Experience Cloud</b><br><span class="lic">hosts the React chat</span></td>
+        <td>Lucid SF Architecture library (Platform services / product icons)</td>
+        <td><span class="swatch" style="background:#00A1E0"></span><span class="mono">#00A1E0</span></td>
+        <td><b>SF Architecture</b> → Experience Cloud icon</td>
+        <td class="lic">SF trademark — shape library.</td>
+      </tr>
+      <tr>
+        <td><b>Data 360</b><br><span class="lic">(ex Data Cloud) source data</span></td>
+        <td>Lucid SF Architecture library. Note 2026 rename: Data Cloud → <b>Data&nbsp;360</b></td>
+        <td><span class="swatch" style="background:#032D60"></span><span class="mono">#032D60</span></td>
+        <td><b>SF Architecture</b> → Data Cloud / Data 360 icon</td>
+        <td class="lic">SF trademark — shape library.</td>
+      </tr>
+      <tr>
+        <td><b>Tableau (Next)</b><br><span class="lic">ProntoWrap analytics</span></td>
+        <td><a href="https://www.salesforce.com/news/media-collection/company-logos-and-video/">SF Media Library</a> → Tableau logo (PNG)</td>
+        <td><span class="swatch" style="background:#1A3D6D"></span><span class="mono">#1A3D6D</span></td>
+        <td>SF Architecture library icon, else import PNG from Media Library</td>
+        <td class="lic">“Tableau from Salesforce” logo — see <a href="https://brand.salesforce.com/content/logo-guidelines">logo guidelines</a>.</td>
+      </tr>
+      <tr>
+        <td><b>Slack</b><br><span class="lic">a deploy channel</span></td>
+        <td><a href="https://www.salesforce.com/news/media-collection/company-logos-and-video/">SF Media Library</a> → Slack logo (PNG, w/ clearspace)</td>
+        <td><span class="swatch" style="background:#4A154B"></span><span class="mono">#4A154B</span></td>
+        <td>SF Architecture library icon, else import PNG</td>
+        <td class="lic">Slack trademark — keep clearspace, don't recolor.</td>
+      </tr>
+      <tr>
+        <td><b>Apex REST proxy</b><br><span class="lic">server-side broker</span></td>
+        <td>Lightning Design System <a href="https://www.lightningdesignsystem.com/icons/">Apex / utility icon</a></td>
+        <td><span class="swatch" style="background:#7A52C7"></span><span class="mono">#7A52C7</span></td>
+        <td>SF Architecture library (Apex / integration) or LDS custom shape</td>
+        <td class="lic">SLDS icons — SF assets, import as custom shapes.</td>
+      </tr>
+      <tr>
+        <td><b>Agent API</b><br><span class="lic">text-only channel</span></td>
+        <td>No dedicated logo → use a labelled <b>API / integration</b> shape</td>
+        <td><span class="swatch" style="background:#0176D3"></span><span class="mono">#0176D3</span></td>
+        <td>SF Architecture → integration/API connector shape + label <span class="mono">/einstein/ai-agent/v1</span></td>
+        <td class="lic">Textual label; no trademark asset needed.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout blue">
+    <b>How to load the Salesforce library in Lucid:</b> open a doc → left <b>Shapes</b> panel → scroll to
+    <b>Standard Libraries</b> → tick <b>“Salesforce Architecture Diagrams”</b> → <b>Use Selected Shapes</b>.
+    For React / Slack / Tableau PNGs not present as native shapes, use <b>File → Import → Image</b> (or drag the SVG onto the canvas).
+  </div>
+
+  <!-- ========================= DIAGRAM 1 ========================= -->
+  <h2 class="section">2 · Diagram A — Component &amp; data flow</h2>
+  <p class="lead">Replaces the ASCII box diagram in <span class="mono">Documentation Solution Workspace/README.md §3.1</span>.
+  Left→right pipeline; each box gets one official icon in its title (◇ slot).</p>
+
+  <div class="canvas">
+    <h3>Controlled Generative UI — request path</h3>
+    <p class="sub">Model picks the component · server owns the data · frontend owns rendering.</p>
+    <div class="flowrow">
+      <div class="node n-react">
+        <div class="role">Frontend · Experience Cloud</div>
+        <div class="title"><span class="icon-slot" style="--n:#61DAFB">React</span><span class="icon-slot" style="--n:#00A1E0">Exp. Cloud</span></div>
+        <div class="desc">Custom chat. Full brand/UX control. <code>fetch</code> same-origin.</div>
+        <div class="caption">POST /primo/{session,message}</div>
+      </div>
+      <div class="arrow"><span>▶</span></div>
+      <div class="node n-proxy">
+        <div class="role">Broker</div>
+        <div class="title"><span class="icon-slot" style="--n:#7A52C7">Apex</span> Apex REST proxy</div>
+        <div class="desc">CORS/CSP fix · OAuth secret server-side · marker post-processing (<code>[[CARD:…]]</code> expand).</div>
+        <div class="caption">Bearer token →</div>
+      </div>
+      <div class="arrow"><span>▶</span></div>
+      <div class="node n-api">
+        <div class="role">Channel · text-only</div>
+        <div class="title"><span class="icon-slot" style="--n:#0176D3">API</span> Agent API</div>
+        <div class="desc"><code>/einstein/ai-agent/v1</code>. Carries plain text only — no CLT payloads.</div>
+        <div class="caption">deliver turn ▶</div>
+      </div>
+      <div class="arrow"><span>▶</span></div>
+      <div class="node n-agent">
+        <div class="role">Reasoning</div>
+        <div class="title"><span class="icon-slot" style="--n:#0B5CAB">Agentforce</span> Agent (Agent Script)</div>
+        <div class="desc">Atlas reasoning · topics/subagents · echoes <code>cardJson</code> inside the marker.</div>
+        <div class="caption">calls ⇅ outputs</div>
+      </div>
+    </div>
+
+    <div class="arrow" style="margin:16px 0"><span>the Agent calls actions, which read data ▼</span></div>
+
+    <div class="flowrow" style="grid-template-columns:1fr 40px 1fr;max-width:640px;margin:0 auto">
+      <div class="node n-action">
+        <div class="role">Deterministic</div>
+        <div class="title"><span class="icon-slot" style="--n:#1FB85C">Flow</span> Apex / Flow actions</div>
+        <div class="desc">Build <code>cardJson</code> from real data. <code>null</code> when no data. Business rules live here.</div>
+      </div>
+      <div class="arrow"><span>◀▶</span></div>
+      <div class="node n-data">
+        <div class="role">Source of truth</div>
+        <div class="title"><span class="icon-slot" style="--n:#032D60">Data 360</span> Data (Data 360 / CRM)</div>
+        <div class="desc">Allergen-safe options · totals · order status. Never invented by the LLM.</div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span class="k k-slot"><span class="box"></span>◇ ICON SLOT — drop official logo here in Lucid</span>
+    </div>
+  </div>
+
+  <!-- ========================= DIAGRAM 2 ========================= -->
+  <h2 class="section">3 · Diagram B — Sequence (who does what, per turn)</h2>
+  <p class="lead">Upgrades the Mermaid <span class="mono">sequenceDiagram</span> in both READMEs. In Lucid use
+  the <b>UML sequence</b> template; give each lifeline actor the matching official icon.</p>
+
+  <div class="canvas">
+    <h3>One conversational turn — with a card</h3>
+    <p class="sub">Color = who's acting: <span class="tag-agentic">agentic (LLM)</span> ·
+      <span class="tag-det">deterministic (server)</span> · <span class="tag-ui">UI (React)</span>.</p>
+
+    <div class="seq">
+      <div class="actor n-user"><div class="node n-user"><div class="title" style="justify-content:center"><span class="icon-slot" style="--n:#64748B">User</span></div></div></div>
+      <div class="actor"><div class="node n-react"><div class="title" style="justify-content:center;font-size:12px"><span class="icon-slot" style="--n:#61DAFB">React</span></div></div></div>
+      <div class="actor"><div class="node n-proxy"><div class="title" style="justify-content:center;font-size:12px"><span class="icon-slot" style="--n:#7A52C7">Apex</span> proxy</div></div></div>
+      <div class="actor"><div class="node n-api"><div class="title" style="justify-content:center;font-size:12px"><span class="icon-slot" style="--n:#0176D3">API</span></div></div></div>
+      <div class="actor"><div class="node n-agent"><div class="title" style="justify-content:center;font-size:12px"><span class="icon-slot" style="--n:#0B5CAB">Agentf.</span></div></div></div>
+      <div class="actor"><div class="node n-data"><div class="title" style="justify-content:center;font-size:12px"><span class="icon-slot" style="--n:#032D60">Data360</span></div></div></div>
+
+      <div class="msg"><span class="num">1</span><b>User → React:</b> “recommend me something”</div>
+      <div class="msg"><span class="num">2</span><b>React → Apex proxy:</b> POST /primo/message (same-origin)</div>
+      <div class="msg"><span class="num">3</span><b>Proxy → Agent API:</b> POST /sessions/{id}/messages (Bearer)</div>
+      <div class="msg"><span class="num">4</span><b>API → Agentforce:</b> deliver turn</div>
+      <div class="msg note"><span class="tag-agentic">🧠 agentic</span> — reason on intent, route to sub-agent</div>
+      <div class="msg note"><span class="tag-agentic">🧠 agentic</span> — <b>Agent → Apex/Flow action:</b> CALL action + args</div>
+      <div class="msg"><span class="num">5</span><b>Action → Data 360:</b> query real data</div>
+      <div class="msg note det"><span class="tag-det">⚙️ deterministic</span> — build <code>cardJson</code> from data (null if none)</div>
+      <div class="msg"><span class="num">6</span><b>Action → Agent:</b> outputs + <code>cardJson</code></div>
+      <div class="msg note"><span class="tag-agentic">🧠 agentic</span> — short text + echo <code>cardJson</code> in <code>[[PRIMO_CARD]]…</code></div>
+      <div class="msg"><span class="num">7</span><b>Agent → API → Proxy:</b> reply = text + marker</div>
+      <div class="msg note det"><span class="tag-det">⚙️ deterministic</span> — (optional) expand <code>[[CARD:…]]</code> / <code>[[TOTAL:…]]</code> tags</div>
+      <div class="msg note ui"><span class="tag-ui">🖥️ UI</span> — <b>React:</b> parseCards() → extract JSON · strip marker · validate type</div>
+      <div class="msg"><span class="num">8</span><b>React → User:</b> sees text + rendered card (never the JSON)</div>
+    </div>
+  </div>
+
+  <!-- ========================= DIAGRAM 3 ========================= -->
+  <h2 class="section">4 · Diagram C — Decision flow (when a card appears)</h2>
+  <p class="lead">Upgrades the Mermaid <span class="mono">flowchart TD</span>. Keep the three semantic fills —
+  they already exist as <span class="mono">classDef</span>s in the repo, so Lucid stays consistent with GitHub.</p>
+
+  <div class="canvas">
+    <h3>Does this turn produce a card?</h3>
+    <div class="flow-v">
+      <div class="node n-user" style="min-width:200px;text-align:center"><div class="title" style="justify-content:center">User message</div></div>
+      <div>▼</div>
+      <div class="decision">🧠 Needs an action?</div>
+      <div class="row">
+        <span class="branch-lbl">no ▶</span>
+        <div class="node n-ui"><div class="title"><span class="icon-slot" style="--n:#61DAFB">React</span> Reply TEXT only</div><div class="desc">greetings · FAQ · clarifying Qs</div></div>
+      </div>
+      <div class="row"><span class="branch-lbl">yes ▼</span></div>
+      <div class="node n-agentic" style="min-width:260px"><div class="role">🧠 agentic</div><div class="title">Pick action + args</div></div>
+      <div>▼</div>
+      <div class="node n-det" style="min-width:300px"><div class="role">⚙️ deterministic</div><div class="title"><span class="icon-slot" style="--n:#1FB85C">Flow</span> Apex/Flow builds <code>cardJson</code> from real data</div></div>
+      <div>▼</div>
+      <div class="decision" style="background:var(--det-fill);border-color:var(--det-stroke)">cardJson present?</div>
+      <div class="row">
+        <span class="branch-lbl">null / no data ▶</span>
+        <div class="node n-agentic"><div class="role">🧠 agentic</div><div class="title">Reply TEXT only</div></div>
+      </div>
+      <div class="row"><span class="branch-lbl">has data ▼</span></div>
+      <div class="node n-agentic" style="min-width:340px"><div class="role">🧠 agentic</div><div class="title">short text + echo <code>cardJson</code> in <code>[[PRIMO_CARD]]…[[/PRIMO_CARD]]</code></div></div>
+      <div>▼</div>
+      <div class="node n-ui" style="min-width:340px"><div class="role">🖥️ UI</div><div class="title"><span class="icon-slot" style="--n:#61DAFB">React</span> parse marker → render matching registered component</div><div class="desc">unknown types render nothing</div></div>
+      <div>▼</div>
+      <div class="node n-user" style="min-width:200px;text-align:center"><div class="title" style="justify-content:center">Shown to user</div></div>
+    </div>
+
+    <div class="legend">
+      <span class="k k-agentic"><span class="box"></span>🧠 agentic (LLM decisions)</span>
+      <span class="k k-det"><span class="box"></span>⚙️ deterministic (server)</span>
+      <span class="k k-ui"><span class="box"></span>🖥️ UI (React render)</span>
+      <span class="k k-slot"><span class="box"></span>◇ icon slot</span>
+    </div>
+  </div>
+
+  <!-- ========================= BUILD STEPS ========================= -->
+  <h2 class="section">5 · How to rebuild this in Lucid</h2>
+  <ol class="steps">
+    <li><b>Don't start from a blank canvas.</b> Reference Architecture Gallery →
+      <a href="https://architect.salesforce.com/diagrams">architect.salesforce.com/diagrams</a>; pick a
+      System Landscape / Solution Architecture template as the base.</li>
+    <li><b>Load shapes.</b> Shapes panel → Standard Libraries → <b>Salesforce Architecture Diagrams</b> → Use Selected Shapes.
+      Import React / Slack / Tableau assets as custom shapes (see the asset table above for sources).</li>
+    <li><b>Lay out</b> the three diagrams using this HTML as the pixel reference: box positions, arrows, labels, colors.</li>
+    <li><b>Drop one official icon per ◇ ICON SLOT.</b> Snap SF icons into the card headers; place React/Slack/Tableau where noted.</li>
+    <li><b>Keep the semantic colors</b> (agentic <span class="mono">#FDE9D9/#F4543A</span>,
+      deterministic <span class="mono">#DDF3E4/#26B864</span>, UI <span class="mono">#E3F1FB/#83D9F2</span>) so Lucid matches the repo's Mermaid.</li>
+    <li><b>Export</b> PNG (and/or SVG) → commit under <code>diagrams/</code> and reference from the READMEs with
+      <code>![](diagrams/…png)</code>. Keep the Mermaid blocks as a text fallback.</li>
+  </ol>
+
+  <div class="callout">
+    <b>Reality check on the Lucid MCP (<span class="mono">mcp.lucid.app/mcp</span>):</b> it can create the diagram
+    <b>structure</b> (nodes, arrows, layout, colors, text) from a prompt and export PNG — great for scaffolding these three
+    layouts fast. It does <b>not</b> reliably drag the official Salesforce shape-library icons into nodes; that step stays in
+    the Lucid editor. So: MCP for the skeleton, editor for the official icons.
+  </div>
+
+  <footer>
+    <b>Generative UI Cards for Agent Script</b> — Lucid diagram blueprint ·
+    all Salesforce/Slack/Tableau/React marks are the property of their respective owners, shown per brand guidelines ·
+    layout reference only.
+  </footer>
+
+</div>
+</body>
+</html>
