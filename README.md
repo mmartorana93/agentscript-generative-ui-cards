@@ -183,9 +183,12 @@ flowchart TD
 
 ## Get started
 
-- Read **[`guide/RECIPE.md`](guide/RECIPE.md)** for the step-by-step implementation.
-- Install the **[skill](skill/SKILL.md)** to have an agent recreate the pattern for you.
-- Browse **[`examples/`](examples/)** for real, sanitized code.
+- **New to this?** Start with **[`guide/CONNECT.md`](guide/CONNECT.md)** — the prerequisite half:
+  how to wire a custom chat to the agent (OAuth External Client App, the Apex REST proxy, and the
+  Experience-Cloud gotchas: site path prefix, `credentials:'omit'`/401, guest class access).
+- Then read **[`guide/RECIPE.md`](guide/RECIPE.md)** for the cards themselves, step by step.
+- Install the **[skill](skill/SKILL.md)** to have an agent recreate the card pattern for you.
+- Browse **[`examples/`](examples/)** for real, sanitized code (proxy, client transport, action, parser, renderer).
 
 ## Credits & sources
 
